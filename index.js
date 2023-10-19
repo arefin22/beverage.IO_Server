@@ -26,8 +26,39 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    const itemCollection = client.db("itemDB").collection("items");
+    const brandCollection = client.db("itemDB").collection("brands");
+    const peopleCollection = client.db("itemDB").collection("peoples");
 
-    
+
+    app.get('/items', async (req, res) => {
+      const result = await itemCollection.find().toArray();
+      res.send(result)
+    })
+
+    app.post('/items', async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await itemCollection.insertOne(item);
+      res.send(result);
+    })
+
+    app.get('/brands', async (req, res) => {
+      const result = await brandCollection.find().toArray();
+      res.send(result);
+    })
+
+    app.get('/users', async (req , res) => {
+      const result = await peopleCollection.find().toArray();
+      res.send(result); 
+    })
+
+    app.post('/users', async(req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await peopleCollection.insertOne(item)
+      res.send(result)
+    })
 
 
 
@@ -38,7 +69,7 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
