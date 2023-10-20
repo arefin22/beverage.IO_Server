@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 
 const app = express()
@@ -25,10 +25,11 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const itemCollection = client.db("itemDB").collection("items");
     const brandCollection = client.db("itemDB").collection("brands");
     const peopleCollection = client.db("itemDB").collection("peoples");
+    const cartCollection = client.db("itemDB").collection("cart");
 
 
     app.get('/items', async (req, res) => {
@@ -43,23 +44,78 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/items/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = {
+          _id: new ObjectId(id),
+        };
+        const result = await itemCollection.findOne(query);
+        console.log(result);
+        if (!result) {
+          res.status(404).send('Item not found');
+          return;
+        }
+        res.send(result)
+      }
+      catch {
+        console.error('Error:', error);
+        res.status(500).send('Internal Server Error');
+      }
+    })
+
+    app.put('/items/:id', async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedItem = {
+        $set: {
+          name: data.name,
+          brand: data.brand,
+          type: data.type,
+          price: data.price,
+          rating: data.rating,
+          description: data.description,
+          photo: data.photo,
+        },
+      };
+      const result = await itemCollection.updateOne(
+        filter,
+        updatedItem,
+        options
+      );
+      res.send(result);
+    })
+
     app.get('/brands', async (req, res) => {
       const result = await brandCollection.find().toArray();
       res.send(result);
     })
 
-    app.get('/users', async (req , res) => {
+    app.get('/users', async (req, res) => {
       const result = await peopleCollection.find().toArray();
-      res.send(result); 
+      res.send(result);
     })
 
-    app.post('/users', async(req, res) => {
+    app.post('/users', async (req, res) => {
       const item = req.body;
       console.log(item);
       const result = await peopleCollection.insertOne(item)
       res.send(result)
     })
 
+    app.get('/cart', async (req, res) => {
+      const result = await itemCollection.find().toArray();
+      res.send(result)
+    })
+
+    app.post('/cart', async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await cartCollection.insertOne(item)
+      res.send(result)
+    })
 
 
 
