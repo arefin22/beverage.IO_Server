@@ -106,14 +106,42 @@ async function run() {
     })
 
     app.get('/cart', async (req, res) => {
-      const result = await itemCollection.find().toArray();
+      const result = await cartCollection.find().toArray();
       res.send(result)
     })
 
     app.post('/cart', async (req, res) => {
       const item = req.body;
+      // const query = {_id : new ObjectId(item)}
       console.log(item);
       const result = await cartCollection.insertOne(item)
+      res.send(result)
+    })
+
+    app.get('/cart/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = {
+          _id: (id),
+        };
+        const result = await cartCollection.findOne(query);
+        console.log(result);
+        if (!result) {
+          res.status(404).send('Item not found');
+          return;
+        }
+        res.send(result)
+      }
+      catch {
+        console.error('Error:', error);
+        res.status(500).send('Internal Server Error');
+      }
+    })
+
+    app.delete('/cart/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: (id) }
+      const result = await cartCollection.deleteOne(query)
       res.send(result)
     })
 
